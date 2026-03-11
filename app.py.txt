@@ -1,0 +1,61 @@
+import streamlit as st
+from gtts import gTTS
+import base64
+
+# 設定網頁標題與風格
+st.set_page_config(page_title="TravelBuddy", layout="centered")
+
+# 加入 CSS 讓畫面更美觀
+st.markdown("""
+    <style>
+    .main { background-color: #f8f9fa; }
+    .stButton>button { width: 100%; border-radius: 20px; height: 3em; background-color: #6c757d; color: white; }
+    .phrase-card { padding: 20px; border-radius: 15px; background-color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    </style>
+    """, unsafe_allow_html=True)
+
+st.title("✈️ TravelBuddy 旅遊生活練")
+st.write("點選場景，開始你的英語練習吧！")
+
+# 精選場景句庫
+scenarios = {
+    "🍴 餐廳點餐": {
+        "I'd like to see the menu, please.": "我想看菜單。",
+        "Could we have the check, please?": "麻煩幫我們買單。",
+        "Is there a vegetarian option?": "有素食選項嗎？"
+    },
+    "🏨 飯店住宿": {
+        "I have a reservation under the name...": "我有預約，名字是...",
+        "What time is breakfast served?": "早餐幾點供應？",
+        "The Wi-Fi is not working in my room.": "房內的 Wi-Fi 無法使用。"
+    },
+    "🚕 交通問路": {
+        "How do I get to the nearest station?": "最近的車站怎麼走？",
+        "Could you take me to this address?": "可以帶我去這個地址嗎？",
+        "Is it within walking distance?": "走路可以到嗎？"
+    }
+}
+
+# 側邊欄：場景選擇
+scene = st.sidebar.selectbox("切換場景", list(scenarios.keys()))
+
+# 顯示選定的場景內容
+st.subheader(f"當前練習：{scene}")
+
+for eng, chi in scenarios[scene].items():
+    with st.container():
+        st.markdown(f'<div class="phrase-card"><b>{eng}</b></div>', unsafe_allow_html=True)
+        col1, col2 = st.columns([3, 1])
+        
+        with col2:
+            if st.button("🔊 讀音", key=eng):
+                tts = gTTS(text=eng, lang='en')
+                tts.save("voice.mp3")
+                st.audio("voice.mp3")
+        
+        with col1:
+            with st.expander("查看中文解釋"):
+                st.write(chi)
+
+st.divider()
+st.caption("✨ 溫馨提醒：每天練習三句，出國旅遊不心慌！")
