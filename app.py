@@ -1,62 +1,91 @@
 import streamlit as st
 from gtts import gTTS
-import base64
+import random
 
-# 設定網頁標題與風格
-st.set_page_config(page_title="TravelBuddy", layout="centered")
+# 基本設定
+st.set_page_config(page_title="LingoTravel", layout="centered")
 
-# 加入 CSS 讓畫面更美觀
-st.markdown("""
-    <style>
-    .main { background-color: #f8f9fa; }
-    .stButton>button { width: 100%; border-radius: 20px; height: 3em; background-color: #6c757d; color: white; }
-    .phrase-card { padding: 20px; border-radius: 15px; background-color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    </style>
-    """, unsafe_allow_html=True)
-
-st.title("✈️ TravelBuddy 旅遊生活練")
-st.write("點選場景，開始你的英語練習吧！")
-
-# 精選場景句庫
-scenarios = {
-    "🍴 餐廳點餐": {
-        "I'd like to see the menu, please.": "我想看菜單。",
-        "Could we have the check, please?": "麻煩幫我們買單。",
-        "Is there a vegetarian option?": "有素食選項嗎？"
+# --- 資料庫：情境會話 ---
+conversations = {
+    "✈️ 機場/交通": {
+        "Where is the boarding gate?": "登機門在哪裡？",
+        "I'd like to book a window seat.": "我想訂靠窗的位子。",
+        "How often does the shuttle bus run?": "接駁車多久一班？"
     },
-    "🏨 飯店住宿": {
-        "I have a reservation under the name...": "我有預約，名字是...",
-        "What time is breakfast served?": "早餐幾點供應？",
-        "The Wi-Fi is not working in my room.": "房內的 Wi-Fi 無法使用。"
+    "🛍️ 購物/殺價": {
+        "Is there any discount?": "有折扣嗎？",
+        "Can I try this on?": "我可以試穿嗎？",
+        "I'll take it.": "我要買這個。"
     },
-    "🚕 交通問路": {
-        "How do I get to the nearest station?": "最近的車站怎麼走？",
-        "Could you take me to this address?": "可以帶我去這個地址嗎？",
-        "Is it within walking distance?": "走路可以到嗎？"
+    "🍕 餐廳點餐": {
+        "Table for two, please.": "兩位，謝謝。",
+        "What is the specialty of the house?": "你們的招牌菜是什麼？",
+        "No cilantro, please.": "請不要加香菜。"
     }
 }
 
-# 側邊欄：場景選擇
-scene = st.sidebar.selectbox("切換場景", list(scenarios.keys()))
+# --- 資料庫：單字背誦 ---
+vocabulary = {
+    "Departure": "出發/離境",
+    "Reservation": "預約/訂位",
+    "Recommendation": "推薦",
+    "Ingredient": "成分/配料",
+    "Destination": "目的地",
+    "Atmosphere": "氣氛",
+    "Discount": "折扣"
+}
 
-# 顯示選定的場景內容
-st.subheader(f"當前練習：{scene}")
+# --- 介面設計 ---
+st.title("🌟 旅遊英語隨身練")
 
-for eng, chi in scenarios[scene].items():
-    with st.container():
-        st.markdown(f'<div class="phrase-card"><b>{eng}</b></div>', unsafe_allow_html=True)
-        col1, col2 = st.columns([3, 1])
-        
-        with col2:
-            if st.button("🔊 讀音", key=eng):
-                tts = gTTS(text=eng, lang='en')
-                tts.save("voice.mp3")
-                st.audio("voice.mp3")
-        
+# 使用 Tab 標籤頁切換
+tab1, tab2 = st.tabs(["💬 情境對話練習", "📚 必背旅遊單字"])
+
+# --- Tab 1: 情境對話 ---
+with tab1:
+    scene = st.selectbox("選擇練習場景：", list(conversations.keys()))
+    st.write("---")
+    for eng, chi in conversations[scene].items():
+        col1, col2 = st.columns([4, 1])
         with col1:
-            with st.expander("查看中文解釋"):
+            st.info(f"**{eng}**")
+            with st.expander("看中文意思"):
                 st.write(chi)
+        with col2:
+            if st.button("🔊", key=f"conv_{eng}"):
+                tts = gTTS(text=eng, lang='en')
+                tts.save("v.mp3")
+                st.audio("v.mp3")
+
+# --- Tab 2: 單字背誦 ---
+with tab2:
+    st.subheader("💡 旅遊生活常用字卡")
+    if 'v_idx' not in st.session_state:
+        st.session_state.v_idx = 0
+    
+    words = list(vocabulary.keys())
+    current_word = words[st.session_state.v_idx]
+    
+    # 顯示字卡
+    st.markdown(f"""
+    <div style="background-color: white; padding: 40px; border-radius: 15px; border: 2px solid #f0f2f6; text-align: center; margin-bottom: 20px;">
+        <h1 style="color: #1E3A8A;">{current_word}</h1>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        if st.button("🔊 聽讀音"):
+            tts = gTTS(text=current_word, lang='en')
+            tts.save("w.mp3")
+            st.audio("w.mp3")
+    with c2:
+        if st.button("👀 看意思"):
+            st.success(f"意思：{vocabulary[current_word]}")
+    with c3:
+        if st.button("➡️ 下一個"):
+            st.session_state.v_idx = (st.session_state.v_idx + 1) % len(words)
+            st.rerun()
 
 st.divider()
-
-st.caption("✨ 溫馨提醒：每天練習三句，出國旅遊不心慌！")
+st.caption("今天也要加油喔！")
