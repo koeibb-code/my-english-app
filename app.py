@@ -58,4 +58,5 @@ for eng, chi in scenarios[scene].items():
                 st.write(chi)
 
 st.divider()
+
 st.caption("✨ 溫馨提醒：每天練習三句，出國旅遊不心慌！")
